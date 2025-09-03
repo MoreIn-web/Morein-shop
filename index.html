@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MORE IN SHOP – MOJO</title>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#6e8efb,#a777e3);color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center}
+    .card{width:min(420px,92vw);background:rgba(255,255,255,.12);backdrop-filter:blur(8px);padding:28px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center;animation:pop .5s ease}
+    @keyframes pop{from{transform:scale(.97);opacity:.3}to{transform:scale(1);opacity:1}}
+    .logo{font-weight:800;letter-spacing:2px;margin-bottom:18px}
+    h1{margin:0 0 6px;font-size:28px}
+    .price{margin:6px 0 18px;font-size:18px;opacity:.9}
+    input{width:100%;padding:12px 14px;border-radius:12px;border:none;outline:none;font-size:16px}
+    button{margin-top:14px;width:100%;padding:12px 14px;border:none;border-radius:14px;font-weight:700;font-size:16px;cursor:pointer;background:#ffdd57;color:#2a2a2a;transition:transform .12s}
+    button:hover{transform:translateY(-1px)}
+    .hint{margin-top:10px;opacity:.85;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">✨ MORE IN SHOP ✨</div>
+    <h1>MOJO</h1>
+    <div class="price">Price: <b>20৳</b></div>
+    <input id="customer" placeholder="আপনার নাম লিখুন" />
+    <button id="buy">I want buy this</button>
+    <div class="hint">Order করলে সঙ্গে সঙ্গে আমাদের ডাটাবেজে সেভ হবে।</div>
+  </div>
+
+  <script type="module">
+    // Firebase v10 (ESM CDN)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // 🔧 Your Firebase config (already filled)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtRh0Edzs8esX5V-7ie7eGgeMHIWgRWb4",
+      authDomain: "more-in-shop.firebaseapp.com",
+      projectId: "more-in-shop",
+      storageBucket: "more-in-shop.appspot.com",
+      messagingSenderId: "42477967682",
+      appId: "1:42477967682:web:097a85d466856876f4d0db"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    document.getElementById('buy').addEventListener('click', async () => {
+      const name = document.getElementById('customer').value.trim();
+      if (!name) { alert("নাম লিখুন"); return; }
+
+      try {
+        await addDoc(collection(db, 'orders'), {
+          customer: name,
+          product : 'MOJO',
+          price   : 20,
+          time    : serverTimestamp()
+        });
+        alert('✅ Order placed!');
+        document.getElementById('customer').value = '';
+      } catch (e) {
+        alert('❌ Order ব্যর্থ: ' + e.message);
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
