@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morein Shop</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #87CEFA, #ffffff);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    /* Cloud Animation */
+    .cloud {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: float linear infinite;
+    }
+    .cloud1 { width: 180px; height: 100px; top: 20%; left: -200px; animation-duration: 40s; }
+    .cloud2 { width: 120px; height: 70px; top: 40%; left: -150px; animation-duration: 60s; }
+    .cloud3 { width: 220px; height: 120px; top: 60%; left: -250px; animation-duration: 50s; }
+
+    @keyframes float {
+      from { transform: translateX(0); }
+      to { transform: translateX(120vw); }
+    }
+
+    /* Product Box */
+    .product {
+      width: 220px;
+      margin: 10px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .product:hover {
+      transform: scale(1.05);
+    }
+    .product-info {
+      display: none;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    input, button {
+      margin-top: 8px;
+      padding: 8px;
+      width: 90%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <!-- Clouds -->
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+  <div class="cloud cloud3"></div>
+
+  <!-- Shop Title -->
+  <h1 style="z-index:2; margin-bottom:20px;">MORE IN SHOP</h1>
+
+  <!-- Product Box -->
+  <div class="product" onclick="toggleInfo(this)">
+    <h2>MOJO</h2>
+    <div class="product-info">
+      <p><b>Price:</b> 20tk</p>
+      <p><b>Location:</b> Lalabazar Fazil Madrasha</p>
+      <p><i>You will receive your product tomorrow at 10:25 AM</i></p>
+      <input type="text" id="customerName" placeholder="Enter your name">
+      <button onclick="placeOrder(event, 'MOJO', 20)">Submit</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // Firebase Config (তোমার config বসাও)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtRh0Edzs8esX5V-7ie7eGgeMHIWgRWb4",
+      authDomain: "more-in-shop.firebaseapp.com",
+      projectId: "more-in-shop",
+      storageBucket: "more-in-shop.appspot.com",
+      messagingSenderId: "42477967682",
+      appId: "1:42477967682:web:097a85d466856876f4d0db"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Toggle Product Info
+    function toggleInfo(box) {
+      const info = box.querySelector(".product-info");
+      info.style.display = info.style.display === "block" ? "none" : "block";
+    }
+
+    // Place Order
+    window.placeOrder = async (e, product, price) => {
+      e.stopPropagation();
+      const nameInput = document.getElementById("customerName");
+      const customer = nameInput.value.trim();
+
+      if (!customer) {
+        alert("Please enter your name!");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "orders"), {
+          customer,
+          product,
+          price,
+          time: serverTimestamp()
+        });
+        alert("✅ Order placed successfully!");
+        nameInput.value = "";
+      } catch (err) {
+        console.error(err);
+        alert("❌ Failed to place order.");
+      }
+    };
+  </script>
+</body>
+</html>
