@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin – Orders</title>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,Arial;background:#0f1220;color:#e9ecf1}
+    .wrap{max-width:960px;margin:40px auto;padding:0 16px}
+    h1{margin:0 0 18px}
+    .box{background:#171b2e;border:1px solid #232744;border-radius:16px;padding:18px;margin-bottom:18px}
+    .row{display:grid;grid-template-columns:1.4fr .8fr .6fr 1.2fr;gap:12px;padding:10px 12px;border-bottom:1px solid #232744}
+    .row.head{font-weight:700;background:#14182a;border-radius:12px}
+    .row:last-child{border-bottom:none}
+    input,button{padding:10px 12px;border-radius:10px;border:1px solid #2a2f4d;background:#0e1222;color:#e9ecf1}
+    button{cursor:pointer;font-weight:700}
+    .login{display:flex;gap:10px;flex-wrap:wrap}
+    .muted{opacity:.8;font-size:12px;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📦 Orders Dashboard</h1>
+
+    <div id="authBox" class="box">
+      <div class="login">
+        <input id="email" type="email" placeholder="Owner email" />
+        <input id="pass" type="password" placeholder="Password" />
+        <button id="loginBtn">Login</button>
+        <button id="logoutBtn" style="display:none">Logout</button>
+      </div>
+      <div class="muted">Only the owner can view orders (secured by Firestore Rules).</div>
+    </div>
+
+    <div id="ordersBox" class="box" style="display:none">
+      <div class="row head"><div>Customer</div><div>Product</div><div>Price</div><div>Time</div></div>
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtRh0Edzs8esX5V-7ie7eGgeMHIWgRWb4",
+      authDomain: "more-in-shop.firebaseapp.com",
+      projectId: "more-in-shop",
+      storageBucket: "more-in-shop.appspot.com",
+      messagingSenderId: "42477967682",
+      appId: "1:42477967682:web:097a85d466856876f4d0db"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const emailEl  = document.getElementById('email');
+    const passEl   = document.getElementById('pass');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn= document.getElementById('logoutBtn');
+    const ordersBox= document.getElementById('ordersBox');
+    const listEl   = document.getElementById('list');
+
+    let unsub = null;
+
+    loginBtn.onclick = async () => {
+      try {
+        await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+      } catch (e) {
+        alert('Login failed: ' + e.message);
+      }
+    };
+
+    logoutBtn.onclick = async () => {
+      if (unsub) { unsub(); unsub = null; }
+      await signOut(auth);
+    };
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        // Logged in → live orders
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+
+        const q = query(collection(db, 'orders'), orderBy('time','desc'));
+        unsub = onSnapshot(q, snap => {
+          listEl.innerHTML = '';
+          snap.forEach(doc => {
+            const o = doc.data();
+            const when = (o.time && o.time.toDate) ? o.time.toDate().toLocaleString() : '—';
+            const row = document.createElement('div');
+            row.className = 'row';
+            row.innerHTML = `<div>${o.customer || ''}</div><div>${o.product}</div><div>${o.price}৳</div><div>${when}</div>`;
+            listEl.appendChild(row);
+          });
+          ordersBox.style.display = 'block';
+        }, err => {
+          alert('Read blocked (check Rules/UID): ' + err.message);
+        });
+
+      } else {
+        // Logged out
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        ordersBox.style.display = 'none';
+        listEl.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>
